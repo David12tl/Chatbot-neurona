@@ -711,8 +711,8 @@ function BenchmarkChat() {
     <main className="benchmark-shell">
       <header className="topbar">
         <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            ◉
+          <span className="brand-mark material-icons" aria-hidden="true">
+            flash
           </span>
           <div>
             <p className="eyebrow">LOCAL INFERENCE & BENCHMARK</p>
@@ -721,7 +721,7 @@ function BenchmarkChat() {
         </div>
 
         {/* NAVEGACIÓN ENTRE PESTAÑAS */}
-        <div className="nav-tabs" role="tablist">
+        <div className="nav-tabs" role="tablist" style={{ justifyContent: "space-between" }}>
           <button
             aria-selected={activeTab === "chat"}
             className={`nav-tab ${activeTab === "chat" ? "active" : ""}`}
@@ -729,7 +729,8 @@ function BenchmarkChat() {
             role="tab"
             type="button"
           >
-            💬 Chat de Diagnóstico
+            <span className="material-icons">chat</span>
+            Chat de Diagnóstico
           </button>
           <button
             aria-selected={activeTab === "stress"}
@@ -738,7 +739,8 @@ function BenchmarkChat() {
             role="tab"
             type="button"
           >
-            ⚡ Pruebas de Estrés
+            <span className="material-icons">flash</span>
+            Pruebas de Estrés
           </button>
         </div>
 
@@ -759,7 +761,9 @@ function BenchmarkChat() {
                 }
                 type="button"
               >
-                <span>🧠 {thinking ? "ON" : "OFF (/no_think)"}</span>
+                <span className="material-icons">
+                  brain
+                </span>{thinking ? "ON" : "OFF (/no_think)"}
               </button>
             </div>
 
