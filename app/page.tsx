@@ -1,6 +1,8 @@
 "use client";
 
 import { useChat, type Message } from "@ai-sdk/react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Suspense,
   useCallback,
@@ -13,6 +15,52 @@ import { StressTestModule } from "./components/StressTestModule";
 
 const SESSION_STORAGE_KEY = "local-llm-benchmark-session-v1";
 const STRESS_STORAGE_KEY = "local-llm-stress-history-v1";
+
+const markdownComponents = {
+  h1: ({ children }: { children?: React.ReactNode }) => (
+    <h1 className="mb-3 mt-5 text-2xl font-bold text-white">{children}</h1>
+  ),
+  h2: ({ children }: { children?: React.ReactNode }) => (
+    <h2 className="mb-3 mt-5 text-xl font-bold text-white">{children}</h2>
+  ),
+  h3: ({ children }: { children?: React.ReactNode }) => (
+    <h3 className="mb-2 mt-4 text-lg font-bold text-white">{children}</h3>
+  ),
+  ul: ({ children }: { children?: React.ReactNode }) => (
+    <ul className="mb-3 list-disc space-y-1 pl-5">{children}</ul>
+  ),
+  ol: ({ children }: { children?: React.ReactNode }) => (
+    <ol className="mb-3 list-decimal space-y-1 pl-5">{children}</ol>
+  ),
+  strong: ({ children }: { children?: React.ReactNode }) => (
+    <strong className="font-semibold text-white">{children}</strong>
+  ),
+  hr: () => <hr className="my-4 border-0 border-t border-[var(--border)]" />,
+  p: ({ children }: { children?: React.ReactNode }) => (
+    <p className="mb-3 leading-relaxed">{children}</p>
+  ),
+  pre: ({ children }: { children?: React.ReactNode }) => (
+    <pre className="my-4 overflow-x-auto rounded-lg border border-[var(--border)] bg-[#0c0f13] p-4 font-mono text-sm">
+      {children}
+    </pre>
+  ),
+  code: ({ children }: { children?: React.ReactNode }) => (
+    <code className="rounded border border-[var(--border)] bg-[#15191f] px-1.5 py-0.5 font-mono text-[0.9em] text-[#dce2e9]">
+      {children}
+    </code>
+  ),
+  table: ({ children }: { children?: React.ReactNode }) => (
+    <table className="my-4 w-full border-collapse text-left">{children}</table>
+  ),
+  th: ({ children }: { children?: React.ReactNode }) => (
+    <th className="border border-[var(--border)] bg-[#15191f] px-3 py-2 font-semibold text-white">
+      {children}
+    </th>
+  ),
+  td: ({ children }: { children?: React.ReactNode }) => (
+    <td className="border border-[var(--border)] px-3 py-2">{children}</td>
+  ),
+};
 
 type MessageMetrics = {
   model?: string;
@@ -946,10 +994,28 @@ function BenchmarkChat() {
                               />
                             )}
                           {parsed.answer ? (
-                            <p className="answer-text">{parsed.answer}</p>
+                            message.role === "assistant" ? (
+                              <div className="answer-text">
+                                <ReactMarkdown
+                                  components={markdownComponents}
+                                  remarkPlugins={[remarkGfm]}
+                                >
+                                  {parsed.answer}
+                                </ReactMarkdown>
+                              </div>
+                            ) : (
+                              <p className="answer-text">{parsed.answer}</p>
+                            )
                           ) : isActivelyThinking ? null : message.role ===
                               "assistant" && !parsed.hasReasoning ? (
-                            <p className="answer-text">{message.content}</p>
+                            <div className="answer-text">
+                              <ReactMarkdown
+                                components={markdownComponents}
+                                remarkPlugins={[remarkGfm]}
+                              >
+                                {message.content}
+                              </ReactMarkdown>
+                            </div>
                           ) : null}
                           {messageMetric?.timedOut && (
                             <div className="timeout-warning-banner">
