@@ -304,6 +304,7 @@ function ReasoningAccordion({
 
 function BenchmarkChat() {
   const [activeTab, setActiveTab] = useState<"chat" | "stress">("chat");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [thinking, setThinking] = useState(true); // Thinking ON por defecto en Chat
   const [metrics, setMetrics] = useState<Record<string, MessageMetrics>>({});
   const [models, setModels] = useState<string[]>([]);
@@ -708,20 +709,38 @@ function BenchmarkChat() {
   const isGenerating = status === "submitted" || status === "streaming";
 
   return (
-    <main className="benchmark-shell">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark material-icons" aria-hidden="true">
-            flash
-          </span>
-          <div>
-            <p className="eyebrow">LOCAL INFERENCE & BENCHMARK</p>
-            <h1>LLM Benchmark</h1>
+    <main
+      className={`benchmark-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}
+    >
+      <aside
+        className="sidebar"
+        id="app-sidebar"
+        aria-label="Navegación principal"
+      >
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <span className="brand-mark material-icons" aria-hidden="true">
+              flash
+            </span>
+            <div className="sidebar-brand-copy">
+              <p className="eyebrow">LOCAL INFERENCE</p>
+              <h1>LLM Benchmark</h1>
+            </div>
           </div>
+          <button
+            aria-label="Ocultar menú"
+            className="sidebar-close"
+            onClick={() => setSidebarCollapsed(true)}
+            title="Ocultar menú"
+            type="button"
+          >
+            <span className="material-icons" aria-hidden="true">
+              close
+            </span>
+          </button>
         </div>
 
-        {/* NAVEGACIÓN ENTRE PESTAÑAS */}
-        <div className="nav-tabs" role="tablist" style={{ justifyContent: "space-between" }}>
+        <div className="nav-tabs" role="tablist" aria-label="Secciones">
           <button
             aria-selected={activeTab === "chat"}
             className={`nav-tab ${activeTab === "chat" ? "active" : ""}`}
@@ -730,7 +749,7 @@ function BenchmarkChat() {
             type="button"
           >
             <span className="material-icons">chat</span>
-            Chat de Diagnóstico
+            <span className="nav-label">Chat de Diagnóstico</span>
           </button>
           <button
             aria-selected={activeTab === "stress"}
@@ -740,93 +759,115 @@ function BenchmarkChat() {
             type="button"
           >
             <span className="material-icons">flash</span>
-            Pruebas de Estrés
+            <span className="nav-label">Pruebas de Estrés</span>
           </button>
         </div>
+      </aside>
 
-        {/* CONTROLES Y RESUMEN SUPERIOR */}
-        {activeTab === "chat" ? (
-          <div className="session-summary" aria-label="Resumen de sesión">
-            {/* TOGGLE THINKING (QWEN 3) */}
-            <div className="summary-item">
-              <span className="summary-label">THINKING</span>
-              <button
-                className={`topbar-thinking-btn ${thinking ? "on" : "off"}`}
-                disabled={isGenerating}
-                onClick={() => setThinking((v) => !v)}
-                title={
-                  thinking
-                    ? "Thinking activado: Qwen 3 emite proceso de razonamiento <think>"
-                    : "Thinking desactivado: Inyecta /no_think para evitar timeouts de 300s"
-                }
-                type="button"
-              >
-                <span className="material-icons">
-                  brain
-                </span>{thinking ? "ON" : "OFF (/no_think)"}
-              </button>
-            </div>
-
-            <div className="summary-item">
-              <label className="summary-label" htmlFor="model-select">
-                MODELO
-              </label>
-              <select
-                className="model-select"
-                disabled={models.length === 0}
-                id="model-select"
-                onChange={(event) => setSelectedModel(event.target.value)}
-                value={selectedModel ?? ""}
-              >
-                <option disabled value="">
-                  {modelError ? "No disponible" : "Cargando modelos…"}
-                </option>
-                {models.map((availableModel) => (
-                  <option key={availableModel} value={availableModel}>
-                    {availableModel}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">TTFT PROM.</span>
-              <span className="summary-value">
-                {averageTtft === null ? "—" : `${averageTtft.toFixed(0)} ms`}
+      <section className="workspace">
+        <header className="topbar">
+          <div className="topbar-title">
+            <button
+              aria-controls="app-sidebar"
+              aria-expanded={!sidebarCollapsed}
+              aria-label={sidebarCollapsed ? "Mostrar menú" : "Ocultar menú"}
+              className="sidebar-toggle"
+              onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+              title={sidebarCollapsed ? "Mostrar menú" : "Ocultar menú"}
+              type="button"
+            >
+              <span className="material-icons" aria-hidden="true">
+                {sidebarCollapsed ? "menu" : "menu_open"}
               </span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">TPS PROM.</span>
-              <span className="summary-value">
-                {averageTps === null ? "—" : `${averageTps.toFixed(1)} tok/s`}
-              </span>
-            </div>
+            </button>
+            <h2>
+              {activeTab === "chat"
+                ? "Chat de Diagnóstico"
+                : "Pruebas de Estrés"}
+            </h2>
           </div>
-        ) : null}
 
-        <button
-          className="clear-button"
-          disabled={!sessionReady}
-          onClick={clearSession}
-          title="Limpiar estado de chat y pruebas de estrés en este navegador"
-          type="button"
-        >
-          Limpiar sesión
-        </button>
-      </header>
+          {activeTab === "chat" ? (
+            <div className="session-summary" aria-label="Resumen de sesión">
+              {/* TOGGLE THINKING (QWEN 3) */}
+              <div className="summary-item">
+                <span className="summary-label">THINKING</span>
+                <button
+                  className={`topbar-thinking-btn ${thinking ? "on" : "off"}`}
+                  disabled={isGenerating}
+                  onClick={() => setThinking((v) => !v)}
+                  title={
+                    thinking
+                      ? "Thinking activado: Qwen 3 emite proceso de razonamiento <think>"
+                      : "Thinking desactivado: Inyecta /no_think para evitar timeouts de 300s"
+                  }
+                  type="button"
+                >
+                  <span className="material-icons">brain</span>
+                  {thinking ? "ON" : "OFF (/no_think)"}
+                </button>
+              </div>
 
-      {modelWarning && (
-        <p className="model-warning" role="status">
-          {modelWarning}
-        </p>
-      )}
+              <div className="summary-item">
+                <label className="summary-label" htmlFor="model-select">
+                  MODELO
+                </label>
+                <select
+                  className="model-select"
+                  disabled={models.length === 0}
+                  id="model-select"
+                  onChange={(event) => setSelectedModel(event.target.value)}
+                  value={selectedModel ?? ""}
+                >
+                  <option disabled value="">
+                    {modelError ? "No disponible" : "Cargando modelos…"}
+                  </option>
+                  {models.map((availableModel) => (
+                    <option key={availableModel} value={availableModel}>
+                      {availableModel}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">TTFT PROM.</span>
+                <span className="summary-value">
+                  {averageTtft === null ? "—" : `${averageTtft.toFixed(0)} ms`}
+                </span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">TPS PROM.</span>
+                <span className="summary-value">
+                  {averageTps === null ? "—" : `${averageTps.toFixed(1)} tok/s`}
+                </span>
+              </div>
+            </div>
+          ) : null}
 
-      {/* VISTA 1: CHAT DE DIAGNÓSTICO */}
-      {activeTab === "chat" && (
-        <>
-          <section
-            className="conversation"
-            aria-label="Conversación de benchmark"
+          <button
+            className="clear-button"
+            disabled={!sessionReady}
+            onClick={clearSession}
+            title="Limpiar estado de chat y pruebas de estrés en este navegador"
+            type="button"
           >
+            Limpiar sesión
+          </button>
+        </header>
+
+        {modelWarning && (
+          <p className="model-warning" role="status">
+            {modelWarning}
+          </p>
+        )}
+
+        {/* VISTA 1: CHAT DE DIAGNÓSTICO */}
+        {activeTab === "chat" && (
+          <>
+            <section
+              className="conversation"
+              aria-label="Conversación de benchmark"
+            >
             {messages.length === 0 ? (
               <div className="empty-state">
                 <span className="empty-icon" aria-hidden="true">
@@ -1009,14 +1050,15 @@ function BenchmarkChat() {
             <p className="composer-hint">
               Intro para enviar <span>·</span> Tus datos permanecen en esta pestaña
             </p>
-          </div>
-        </>
-      )}
+            </div>
+          </>
+        )}
 
-      {/* VISTA 2: PRUEBAS DE ESTRÉS */}
-      {activeTab === "stress" && (
-        <StressTestModule availableModels={models} />
-      )}
+        {/* VISTA 2: PRUEBAS DE ESTRÉS */}
+        {activeTab === "stress" && (
+          <StressTestModule availableModels={models} />
+        )}
+      </section>
     </main>
   );
 }
