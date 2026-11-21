@@ -1,5 +1,5 @@
-import { createOpenAI } from "@ai-sdk/openai";
 import { streamText, type CoreMessage } from "ai";
+import { createCustomOpenAI } from "@/lib/reasoningStream";
 
 const FALLBACK_MODELS = ["qwen3:8b", "qwen3:30b"];
 const DEFAULT_MODEL = "qwen3:8b";
@@ -110,8 +110,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const messages = parseMessages(body.messages);
-  if (!messages || messages.length === 0) {
+  const rawMessages = parseMessages(body.messages);
+  if (!rawMessages || rawMessages.length === 0) {
     return Response.json(
       { error: "Se requiere una lista válida de mensajes." },
       { status: 400 },
@@ -138,11 +138,36 @@ export async function POST(request: Request) {
     );
   }
 
-  const localLLM = createOpenAI({ baseURL, apiKey });
+  // Control de Thinking (Qwen 3): cuando está en false, inyecta la directiva /no_think
+  const thinking = body.thinking !== false;
+  const messages: CoreMessage[] = [...rawMessages];
+
+  if (!thinking) {
+    const firstSystemIndex = messages.findIndex((m) => m.role === "system");
+    if (firstSystemIndex >= 0) {
+      const existing = messages[firstSystemIndex];
+      if (typeof existing.content === "string" && !existing.content.includes("/no_think")) {
+        messages[firstSystemIndex] = {
+          role: "system",
+          content: `/no_think\n${existing.content}`,
+        };
+      }
+    } else {
+      messages.unshift({
+        role: "system",
+        content: "/no_think",
+      });
+    }
+  }
+
+  const localLLM = createCustomOpenAI(baseURL, apiKey);
   const result = streamText({
     model: localLLM.chat(model),
     messages,
   });
 
-  return result.toDataStreamResponse();
+  return result.toDataStreamResponse({
+    sendReasoning: true,
+    sendUsage: true,
+  });
 }
