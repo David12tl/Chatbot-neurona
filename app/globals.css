@@ -457,6 +457,35 @@ button {
     padding: 13px 0;
   }
 
+  .nav-tabs {
+    @media (max-width: 640px) {
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .nav-tab {
+      @media (max-width: 640px) {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+
+  .brand {
+    @media (max-width: 640px) {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .brand-mark {
+      @media (max-width: 640px) {
+        margin-bottom: 8px;
+      }
+    }
+  }
+
   .session-summary {
     order: 3;
     width: 100%;
